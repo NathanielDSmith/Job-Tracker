@@ -20,35 +20,42 @@ const JobTracker: React.FC = () => {
   // Load data from localStorage on component mount
   useEffect(() => {
     const savedJobs = localStorage.getItem(STORAGE_KEY);
-    if (savedJobs) {
+    console.log('Loading jobs from localStorage:', savedJobs);
+    
+    if (savedJobs && savedJobs !== '[]') {
       try {
         const parsedJobs = JSON.parse(savedJobs);
-        setJobApplications(parsedJobs);
+        if (parsedJobs && parsedJobs.length > 0) {
+          setJobApplications(parsedJobs);
+          return;
+        }
       } catch (error) {
         console.error('Error loading jobs from localStorage:', error);
-        // If there's an error parsing, load default data
-        loadDefaultData();
       }
-    } else {
-      // If no saved data, load default sample data
-      loadDefaultData();
     }
+    
+    // If no saved data or empty array, load default sample data
+    console.log('Loading default data');
+    loadDefaultData();
   }, []);
 
   // Save data to localStorage whenever jobApplications changes
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(jobApplications));
+    if (jobApplications.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(jobApplications));
+      console.log('Saved jobs to localStorage:', jobApplications.length, 'jobs');
+    }
   }, [jobApplications]);
 
   const loadDefaultData = () => {
     const defaultJobs: JobApplication[] = [
       {
         id: 1,
-        companyName: 'TechCorp Inc.',
+        companyName: 'TechCorp Solutions',
         jobTitle: 'Senior Frontend Developer',
         dateApplied: '2024-01-15',
         status: 'Interview',
-        details: 'Applied through LinkedIn. Had initial phone screening with HR. Technical interview scheduled for next week.'
+        details: 'Applied through LinkedIn. Had initial phone screening with HR manager Sarah Johnson. Technical interview scheduled for next week with the engineering team. Company focuses on fintech solutions and uses React/TypeScript stack.'
       },
       {
         id: 2,
@@ -56,18 +63,48 @@ const JobTracker: React.FC = () => {
         jobTitle: 'Full Stack Engineer',
         dateApplied: '2024-01-10',
         status: 'Applied',
-        details: 'Found through job board. Company focuses on fintech solutions. Remote position available.'
+        details: 'Found through AngelList job board. Remote-first company with flexible hours. Tech stack includes Node.js, React, and PostgreSQL. Team of 15 developers, Series A funding.'
       },
       {
         id: 3,
-        companyName: 'BigTech Solutions',
+        companyName: 'BigTech Inc.',
         jobTitle: 'React Developer',
         dateApplied: '2024-01-05',
         status: 'Offer',
-        details: 'Completed all interview rounds. Received offer letter with competitive salary and benefits package.'
+        details: 'Completed all interview rounds successfully! Received offer letter with competitive salary ($120k base + equity). Benefits include health insurance, 401k matching, and unlimited PTO. Start date: February 1st.'
+      },
+      {
+        id: 4,
+        companyName: 'Digital Agency Pro',
+        jobTitle: 'Frontend Developer',
+        dateApplied: '2024-01-12',
+        status: 'Rejected',
+        details: 'Applied for agency position. Had technical interview but they were looking for someone with more Vue.js experience. Good feedback received, will keep in touch for future opportunities.'
+      },
+      {
+        id: 5,
+        companyName: 'E-commerce Platform',
+        jobTitle: 'Senior UI/UX Developer',
+        dateApplied: '2024-01-08',
+        status: 'Interview',
+        details: 'Second round interview completed. Met with design team and product manager. Discussed portfolio and previous e-commerce projects. Final decision expected by end of week.'
+      },
+      {
+        id: 6,
+        companyName: 'Healthcare Tech',
+        jobTitle: 'React Native Developer',
+        dateApplied: '2024-01-03',
+        status: 'Applied',
+        details: 'Healthcare startup focused on patient management apps. Remote position with occasional office visits. Tech stack: React Native, Firebase, TypeScript. Mission-driven company.'
       }
     ];
     setJobApplications(defaultJobs);
+  };
+
+  const resetToDefaultData = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    loadDefaultData();
+    console.log('Reset to default data');
   };
 
   const handleAddJob = (jobData: Omit<JobApplication, 'id'>) => {
@@ -151,9 +188,18 @@ const JobTracker: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
-        Job Application Tracker
-      </h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">
+          Job Application Tracker
+        </h1>
+        <button 
+          onClick={resetToDefaultData}
+          className="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-gray-700"
+          title="Reset to default data"
+        >
+          🔄 Reset
+        </button>
+      </div>
       
       {/* Add New Job Form */}
       <JobForm onSubmit={handleAddJob} />
