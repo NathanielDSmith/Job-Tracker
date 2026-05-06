@@ -32,7 +32,7 @@ A modern React TypeScript application for tracking job applications with a clean
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/job-tracker.git
+git clone https://github.com/NathanielDSmith/Job-Tracker.git
 cd job-tracker
 ```
 
@@ -58,14 +58,12 @@ npm run build
 
 ```
 src/
-├── components/
-│   ├── JobTracker.tsx    # Main application component
-│   ├── JobForm.tsx       # Form for adding new applications
-│   └── JobCard.tsx       # Individual job application card
-├── types/
-│   └── types.ts          # TypeScript interfaces
-├── App.tsx               # Root component
-└── main.tsx             # Application entry point
+├── JobTracker.tsx    # Main application component
+├── JobForm.tsx       # Form for adding new applications
+├── JobCard.tsx       # Individual job application card
+├── types.ts          # TypeScript interfaces
+├── App.tsx           # Root component
+└── main.tsx          # Application entry point
 ```
 
 ## Usage

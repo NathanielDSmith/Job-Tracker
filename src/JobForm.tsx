@@ -13,6 +13,7 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
     status: 'Applied' as JobApplication['status'],
     details: ''
   });
+  const [error, setError] = useState('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -26,13 +27,12 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
     e.preventDefault();
     
     if (!formData.companyName || !formData.jobTitle || !formData.dateApplied) {
-      alert('Please fill in all required fields');
+      setError('Company name, job title, and date applied are required.');
       return;
     }
 
+    setError('');
     onSubmit(formData);
-    
-    // Reset form
     setFormData({
       companyName: '',
       jobTitle: '',
@@ -45,6 +45,9 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-8">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Add New Application</h2>
+      {error && (
+        <p className="text-sm text-red-600 mb-2">{error}</p>
+      )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>

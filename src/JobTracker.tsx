@@ -16,12 +16,12 @@ const JobTracker: React.FC = () => {
     status: 'Applied' as JobApplication['status'],
     details: ''
   });
+  const [editError, setEditError] = useState('');
 
   // Load data from localStorage on component mount
   useEffect(() => {
     const savedJobs = localStorage.getItem(STORAGE_KEY);
-    console.log('Loading jobs from localStorage:', savedJobs);
-    
+
     if (savedJobs && savedJobs !== '[]') {
       try {
         const parsedJobs = JSON.parse(savedJobs);
@@ -29,13 +29,11 @@ const JobTracker: React.FC = () => {
           setJobApplications(parsedJobs);
           return;
         }
-      } catch (error) {
-        console.error('Error loading jobs from localStorage:', error);
+      } catch {
+        // corrupted data — fall through to defaults
       }
     }
-    
-    // If no saved data or empty array, load default sample data
-    console.log('Loading default data');
+
     loadDefaultData();
   }, []);
 
@@ -43,7 +41,6 @@ const JobTracker: React.FC = () => {
   useEffect(() => {
     if (jobApplications.length > 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(jobApplications));
-      console.log('Saved jobs to localStorage:', jobApplications.length, 'jobs');
     }
   }, [jobApplications]);
 
@@ -104,7 +101,6 @@ const JobTracker: React.FC = () => {
   const resetToDefaultData = () => {
     localStorage.removeItem(STORAGE_KEY);
     loadDefaultData();
-    console.log('Reset to default data');
   };
 
   const handleAddJob = (jobData: Omit<JobApplication, 'id'>) => {
@@ -137,9 +133,10 @@ const JobTracker: React.FC = () => {
 
   const handleSaveEdit = () => {
     if (!editFormData.companyName || !editFormData.jobTitle || !editFormData.dateApplied) {
-      alert('Please fill in all required fields');
+      setEditError('Company name, job title, and date applied are required.');
       return;
     }
+    setEditError('');
 
     setJobApplications(prev => prev.map(job => 
       job.id === editingId ? { ...job, ...editFormData } : job
@@ -157,6 +154,7 @@ const JobTracker: React.FC = () => {
 
   const handleCancelEdit = () => {
     setEditingId(null);
+    setEditError('');
     setEditFormData({
       companyName: '',
       jobTitle: '',
@@ -224,6 +222,9 @@ const JobTracker: React.FC = () => {
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Edit Application</h2>
+              {editError && (
+                <p className="text-sm text-red-600 mb-2">{editError}</p>
+              )}
               <form onSubmit={(e) => { e.preventDefault(); handleSaveEdit(); }} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
