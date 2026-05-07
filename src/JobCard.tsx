@@ -22,18 +22,28 @@ const JobCard: React.FC<JobCardProps> = ({
 }) => {
   const [noteText, setNoteText] = useState('');
 
-  const getStatusColor = (status: JobApplication['status']) => {
+  const getStatusBadge = (status: JobApplication['status']) => {
     switch (status) {
       case 'Applied':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'Interview':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'Offer':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
       case 'Rejected':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-red-50 text-red-500 border-red-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-100 text-gray-600 border-gray-200';
+    }
+  };
+
+  const getStatusAccent = (status: JobApplication['status']) => {
+    switch (status) {
+      case 'Applied':   return 'border-l-blue-400';
+      case 'Interview': return 'border-l-amber-400';
+      case 'Offer':     return 'border-l-emerald-400';
+      case 'Rejected':  return 'border-l-red-400';
+      default:          return 'border-l-gray-300';
     }
   };
 
@@ -66,7 +76,7 @@ const JobCard: React.FC<JobCardProps> = ({
   const notes = job.notes ?? [];
 
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-300 relative">
+    <div className={`bg-white rounded-xl shadow-sm border border-gray-200 border-l-4 ${getStatusAccent(job.status)} p-5 hover:shadow-md transition-shadow duration-200 relative`}>
       {/* Action Buttons */}
       <div className="absolute top-3 right-3 flex gap-2">
         <button
@@ -86,21 +96,21 @@ const JobCard: React.FC<JobCardProps> = ({
       </div>
 
       {/* Job Content */}
-      <div className="mb-4">
-        <h2 className="text-xl font-semibold text-gray-800 mb-1 pr-16">
+      <div className="mb-3">
+        <h2 className="text-lg font-semibold text-slate-800 mb-0.5 pr-16">
           {job.companyName}
         </h2>
-        <p className="text-gray-600 font-medium">
+        <p className="text-slate-500 text-sm">
           {job.jobTitle}
         </p>
       </div>
 
-      <div className="mb-4 space-y-1">
-        <p className="text-sm text-gray-500">
-          Applied: {formatDate(job.dateApplied)}
+      <div className="mb-3 space-y-0.5">
+        <p className="text-xs text-slate-400">
+          Applied {formatDate(job.dateApplied)}
         </p>
         {job.salary && (
-          <p className="text-sm text-gray-500">
+          <p className="text-xs text-slate-500 font-medium">
             {job.salary}
           </p>
         )}
@@ -108,7 +118,7 @@ const JobCard: React.FC<JobCardProps> = ({
 
       <div className="flex justify-between items-center mb-3">
         <span
-          className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(job.status)}`}
+          className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(job.status)}`}
         >
           {job.status}
         </span>
@@ -117,7 +127,7 @@ const JobCard: React.FC<JobCardProps> = ({
             href={job.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+            className="text-xs text-indigo-500 hover:text-indigo-700 hover:underline"
           >
             View posting ↗
           </a>
@@ -126,17 +136,17 @@ const JobCard: React.FC<JobCardProps> = ({
 
       {/* Details Section */}
       {(job.details || notes.length > 0) && (
-        <div className="border-t border-gray-100 pt-3">
+        <div className="border-t border-slate-100 pt-3">
           <button
             onClick={() => onToggleDetails(job.id)}
-            className="text-sm text-blue-600 hover:text-blue-800 font-medium mb-2"
+            className="text-xs text-indigo-500 hover:text-indigo-700 font-medium mb-2"
           >
             {isExpanded ? 'Hide Details' : `View Details${notes.length > 0 ? ` · ${notes.length} note${notes.length !== 1 ? 's' : ''}` : ''}`}
           </button>
           {isExpanded && (
             <div className="space-y-3">
               {job.details && (
-                <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
+                <div className="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg leading-relaxed">
                   {job.details}
                 </div>
               )}
@@ -144,13 +154,13 @@ const JobCard: React.FC<JobCardProps> = ({
               {/* Notes */}
               <div className="space-y-2">
                 {notes.length > 0 && (
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Activity</p>
+                  <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Activity</p>
                 )}
                 {[...notes].reverse().map(note => (
                   <div key={note.id} className="flex gap-2 items-start group">
-                    <div className="flex-1 bg-gray-50 rounded-md px-3 py-2">
-                      <p className="text-sm text-gray-700">{note.text}</p>
-                      <p className="text-xs text-gray-400 mt-1">{formatNoteTimestamp(note.timestamp)}</p>
+                    <div className="flex-1 bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+                      <p className="text-sm text-slate-700">{note.text}</p>
+                      <p className="text-xs text-slate-400 mt-1">{formatNoteTimestamp(note.timestamp)}</p>
                     </div>
                     <button
                       onClick={() => onDeleteNote(job.id, note.id)}
@@ -169,12 +179,12 @@ const JobCard: React.FC<JobCardProps> = ({
                     value={noteText}
                     onChange={e => setNoteText(e.target.value)}
                     placeholder="Add a note..."
-                    className="flex-1 text-sm px-3 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                    className="flex-1 text-sm px-3 py-1.5 border border-slate-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent placeholder-slate-400"
                   />
                   <button
                     type="submit"
                     disabled={!noteText.trim()}
-                    className="text-sm px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
+                    className="text-sm px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
                   >
                     Add
                   </button>
@@ -187,7 +197,7 @@ const JobCard: React.FC<JobCardProps> = ({
 
       {/* Show note input even when no details, if not expanded */}
       {!job.details && notes.length === 0 && (
-        <div className="border-t border-gray-100 pt-3">
+        <div className="border-t border-slate-100 pt-3">
           <form onSubmit={handleNoteSubmit} className="flex gap-2">
             <input
               type="text"
