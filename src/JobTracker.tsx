@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { JobApplication } from './types';
+import type { JobApplication, Note } from './types';
 import JobForm from './JobForm';
 import JobCard from './JobCard';
 
@@ -122,6 +122,27 @@ const JobTracker: React.FC = () => {
       newSet.delete(id);
       return newSet;
     });
+  };
+
+  const handleAddNote = (jobId: number, text: string) => {
+    const note: Note = {
+      id: Date.now(),
+      text,
+      timestamp: new Date().toISOString()
+    };
+    setJobApplications(prev => prev.map(job =>
+      job.id === jobId
+        ? { ...job, notes: [...(job.notes ?? []), note] }
+        : job
+    ));
+  };
+
+  const handleDeleteNote = (jobId: number, noteId: number) => {
+    setJobApplications(prev => prev.map(job =>
+      job.id === jobId
+        ? { ...job, notes: (job.notes ?? []).filter(n => n.id !== noteId) }
+        : job
+    ));
   };
 
   const handleEdit = (job: JobApplication) => {
@@ -266,6 +287,8 @@ const JobTracker: React.FC = () => {
             onDelete={handleDelete}
             isExpanded={expandedDetails.has(job.id)}
             onToggleDetails={toggleDetails}
+            onAddNote={handleAddNote}
+            onDeleteNote={handleDeleteNote}
           />
         ))}
       </div>

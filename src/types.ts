@@ -1,3 +1,9 @@
+export interface Note {
+  id: number;
+  text: string;
+  timestamp: string;
+}
+
 export interface JobApplication {
   id: number;
   companyName: string;
@@ -7,4 +13,5 @@ export interface JobApplication {
   details: string;
   url?: string;
   salary?: string;
+  notes?: Note[];
 } 
