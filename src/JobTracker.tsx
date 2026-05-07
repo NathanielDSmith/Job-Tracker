@@ -231,31 +231,47 @@ const JobTracker: React.FC = () => {
   });
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800">
-          Job Application Tracker
-        </h1>
+    <div className="max-w-5xl mx-auto p-6">
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800">Job Application Tracker</h1>
+          <p className="text-slate-500 text-sm mt-1">Keep your job search organized in one place</p>
+        </div>
         <button
           onClick={resetToDefaultData}
-          className="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-gray-700"
+          className="text-xs bg-white border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded-lg text-gray-500 transition-colors duration-150"
           title="Reset to default data"
         >
           🔄 Reset
         </button>
       </div>
 
+      {/* Stats summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+        {[
+          { label: 'Applied', count: statusCounts.Applied, bg: 'bg-blue-50', border: 'border-blue-100', text: 'text-blue-700' },
+          { label: 'Interview', count: statusCounts.Interview, bg: 'bg-amber-50', border: 'border-amber-100', text: 'text-amber-700' },
+          { label: 'Offer', count: statusCounts.Offer, bg: 'bg-emerald-50', border: 'border-emerald-100', text: 'text-emerald-700' },
+          { label: 'Rejected', count: statusCounts.Rejected, bg: 'bg-red-50', border: 'border-red-100', text: 'text-red-500' },
+        ].map(({ label, count, bg, border, text }) => (
+          <div key={label} className={`${bg} border ${border} rounded-xl px-4 py-3 text-center`}>
+            <p className={`text-2xl font-bold ${text}`}>{count}</p>
+            <p className={`text-xs font-medium ${text} opacity-75`}>{label}</p>
+          </div>
+        ))}
+      </div>
+
       {/* Add New Job Form */}
       <JobForm onSubmit={handleAddJob} />
 
       {/* Search and Filter */}
-      <div className="mb-6 space-y-3">
+      <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6 space-y-3">
         <input
           type="text"
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="Search by company or job title..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm placeholder-gray-400"
         />
         <div className="flex flex-wrap gap-2">
           {(['All', 'Applied', 'Interview', 'Offer', 'Rejected'] as const).map(s => (
@@ -264,11 +280,11 @@ const JobTracker: React.FC = () => {
               onClick={() => setStatusFilter(s)}
               className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors duration-150 ${
                 statusFilter === s
-                  ? 'bg-blue-600 text-white border-blue-600'
-                  : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-600'
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
               }`}
             >
-              {s} <span className="opacity-70">({statusCounts[s]})</span>
+              {s} <span className="opacity-60">({statusCounts[s]})</span>
             </button>
           ))}
         </div>
@@ -276,7 +292,9 @@ const JobTracker: React.FC = () => {
 
       {/* Job Applications List */}
       {filteredApplications.length === 0 && (
-        <p className="text-center text-gray-400 py-12 text-sm">No applications match your search.</p>
+        <div className="text-center py-16">
+          <p className="text-slate-400 text-sm">No applications match your search.</p>
+        </div>
       )}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredApplications.map((job) => (
@@ -296,7 +314,7 @@ const JobTracker: React.FC = () => {
       {/* Edit Modal Overlay */}
       {editingId && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Edit Application</h2>
               {editError && (
@@ -314,7 +332,7 @@ const JobTracker: React.FC = () => {
                       name="companyName"
                       value={editFormData.companyName}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
                       required
                     />
                   </div>
@@ -329,7 +347,7 @@ const JobTracker: React.FC = () => {
                       name="jobTitle"
                       value={editFormData.jobTitle}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
                       required
                     />
                   </div>
@@ -344,7 +362,7 @@ const JobTracker: React.FC = () => {
                       name="dateApplied"
                       value={editFormData.dateApplied}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
                       required
                     />
                   </div>
@@ -358,7 +376,7 @@ const JobTracker: React.FC = () => {
                       name="status"
                       value={editFormData.status}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
                     >
                       <option value="Applied">Applied</option>
                       <option value="Interview">Interview</option>
@@ -377,7 +395,7 @@ const JobTracker: React.FC = () => {
                       name="salary"
                       value={editFormData.salary}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
                       placeholder="e.g. $80k–$100k"
                     />
                   </div>
@@ -393,7 +411,7 @@ const JobTracker: React.FC = () => {
                     name="url"
                     value={editFormData.url}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
                     placeholder="https://..."
                   />
                 </div>
@@ -408,7 +426,7 @@ const JobTracker: React.FC = () => {
                     value={editFormData.details}
                     onChange={handleInputChange}
                     rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
                     placeholder="Add any additional details about the application..."
                   />
                 </div>
@@ -416,14 +434,14 @@ const JobTracker: React.FC = () => {
                 <div className="flex gap-3 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+                    className="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200 text-sm font-medium"
                   >
                     Save Changes
                   </button>
                   <button
                     type="button"
                     onClick={handleCancelEdit}
-                    className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200"
+                    className="flex-1 bg-slate-100 text-slate-600 py-2 px-4 rounded-lg hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 transition-colors duration-200 text-sm font-medium"
                   >
                     Cancel
                   </button>
