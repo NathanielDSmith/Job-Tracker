@@ -25,87 +25,22 @@ const JobTracker: React.FC = () => {
   // Load data from localStorage on component mount
   useEffect(() => {
     const savedJobs = localStorage.getItem(STORAGE_KEY);
-
-    if (savedJobs && savedJobs !== '[]') {
+    if (savedJobs) {
       try {
         const parsedJobs = JSON.parse(savedJobs);
-        if (parsedJobs && parsedJobs.length > 0) {
+        if (Array.isArray(parsedJobs)) {
           setJobApplications(parsedJobs);
-          return;
         }
       } catch {
-        // corrupted data — fall through to defaults
+        // corrupted data — start fresh
       }
     }
-
-    loadDefaultData();
   }, []);
 
   // Save data to localStorage whenever jobApplications changes
   useEffect(() => {
-    if (jobApplications.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(jobApplications));
-    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(jobApplications));
   }, [jobApplications]);
-
-  const loadDefaultData = () => {
-    const defaultJobs: JobApplication[] = [
-      {
-        id: 1,
-        companyName: 'TechCorp Solutions',
-        jobTitle: 'Senior Frontend Developer',
-        dateApplied: '2024-01-15',
-        status: 'Interview',
-        details: 'Applied through LinkedIn. Had initial phone screening with HR manager Sarah Johnson. Technical interview scheduled for next week with the engineering team. Company focuses on fintech solutions and uses React/TypeScript stack.'
-      },
-      {
-        id: 2,
-        companyName: 'StartupXYZ',
-        jobTitle: 'Full Stack Engineer',
-        dateApplied: '2024-01-10',
-        status: 'Applied',
-        details: 'Found through AngelList job board. Remote-first company with flexible hours. Tech stack includes Node.js, React, and PostgreSQL. Team of 15 developers, Series A funding.'
-      },
-      {
-        id: 3,
-        companyName: 'BigTech Inc.',
-        jobTitle: 'React Developer',
-        dateApplied: '2024-01-05',
-        status: 'Offer',
-        details: 'Completed all interview rounds successfully! Received offer letter with competitive salary ($120k base + equity). Benefits include health insurance, 401k matching, and unlimited PTO. Start date: February 1st.'
-      },
-      {
-        id: 4,
-        companyName: 'Digital Agency Pro',
-        jobTitle: 'Frontend Developer',
-        dateApplied: '2024-01-12',
-        status: 'Rejected',
-        details: 'Applied for agency position. Had technical interview but they were looking for someone with more Vue.js experience. Good feedback received, will keep in touch for future opportunities.'
-      },
-      {
-        id: 5,
-        companyName: 'E-commerce Platform',
-        jobTitle: 'Senior UI/UX Developer',
-        dateApplied: '2024-01-08',
-        status: 'Interview',
-        details: 'Second round interview completed. Met with design team and product manager. Discussed portfolio and previous e-commerce projects. Final decision expected by end of week.'
-      },
-      {
-        id: 6,
-        companyName: 'Healthcare Tech',
-        jobTitle: 'React Native Developer',
-        dateApplied: '2024-01-03',
-        status: 'Applied',
-        details: 'Healthcare startup focused on patient management apps. Remote position with occasional office visits. Tech stack: React Native, Firebase, TypeScript. Mission-driven company.'
-      }
-    ];
-    setJobApplications(defaultJobs);
-  };
-
-  const resetToDefaultData = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    loadDefaultData();
-  };
 
   const handleAddJob = (jobData: Omit<JobApplication, 'id'>) => {
     const newJob: JobApplication = {
@@ -232,18 +167,9 @@ const JobTracker: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">Job Application Tracker</h1>
-          <p className="text-slate-500 text-sm mt-1">Keep your job search organized in one place</p>
-        </div>
-        <button
-          onClick={resetToDefaultData}
-          className="text-xs bg-white border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded-lg text-gray-500 transition-colors duration-150"
-          title="Reset to default data"
-        >
-          🔄 Reset
-        </button>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-slate-800">Job Application Tracker</h1>
+        <p className="text-slate-500 text-sm mt-1">Keep your job search organized in one place</p>
       </div>
 
       {/* Stats summary */}
@@ -293,7 +219,11 @@ const JobTracker: React.FC = () => {
       {/* Job Applications List */}
       {filteredApplications.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-slate-400 text-sm">No applications match your search.</p>
+          <p className="text-slate-400 text-sm">
+            {jobApplications.length === 0
+              ? 'No applications yet — add one above to get started.'
+              : 'No applications match your search.'}
+          </p>
         </div>
       )}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
