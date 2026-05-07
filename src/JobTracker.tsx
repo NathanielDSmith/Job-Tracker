@@ -14,7 +14,9 @@ const JobTracker: React.FC = () => {
     jobTitle: '',
     dateApplied: '',
     status: 'Applied' as JobApplication['status'],
-    details: ''
+    details: '',
+    url: '',
+    salary: ''
   });
   const [editError, setEditError] = useState('');
 
@@ -127,7 +129,9 @@ const JobTracker: React.FC = () => {
       jobTitle: job.jobTitle,
       dateApplied: job.dateApplied,
       status: job.status,
-      details: job.details
+      details: job.details,
+      url: job.url ?? '',
+      salary: job.salary ?? ''
     });
   };
 
@@ -148,7 +152,9 @@ const JobTracker: React.FC = () => {
       jobTitle: '',
       dateApplied: '',
       status: 'Applied',
-      details: ''
+      details: '',
+      url: '',
+      salary: ''
     });
   };
 
@@ -160,7 +166,9 @@ const JobTracker: React.FC = () => {
       jobTitle: '',
       dateApplied: '',
       status: 'Applied',
-      details: ''
+      details: '',
+      url: '',
+      salary: ''
     });
   };
 
@@ -289,6 +297,36 @@ const JobTracker: React.FC = () => {
                       <option value="Rejected">Rejected</option>
                     </select>
                   </div>
+
+                  <div>
+                    <label htmlFor="edit-salary" className="block text-sm font-medium text-gray-700 mb-1">
+                      Salary / Range
+                    </label>
+                    <input
+                      type="text"
+                      id="edit-salary"
+                      name="salary"
+                      value={editFormData.salary}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="e.g. $80k–$100k"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="edit-url" className="block text-sm font-medium text-gray-700 mb-1">
+                    Job Posting URL
+                  </label>
+                  <input
+                    type="url"
+                    id="edit-url"
+                    name="url"
+                    value={editFormData.url}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="https://..."
+                  />
                 </div>
                 
                 <div>

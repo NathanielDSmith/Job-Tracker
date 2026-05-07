@@ -5,4 +5,6 @@ export interface JobApplication {
   dateApplied: string;
   status: 'Applied' | 'Interview' | 'Offer' | 'Rejected';
   details: string;
+  url?: string;
+  salary?: string;
 } 
