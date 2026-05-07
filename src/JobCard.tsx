@@ -69,18 +69,33 @@ const JobCard: React.FC<JobCardProps> = ({
         </p>
       </div>
       
-      <div className="mb-4">
+      <div className="mb-4 space-y-1">
         <p className="text-sm text-gray-500">
           Applied: {formatDate(job.dateApplied)}
         </p>
+        {job.salary && (
+          <p className="text-sm text-gray-500">
+            {job.salary}
+          </p>
+        )}
       </div>
-      
+
       <div className="flex justify-between items-center mb-3">
         <span
           className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(job.status)}`}
         >
           {job.status}
         </span>
+        {job.url && (
+          <a
+            href={job.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+          >
+            View posting ↗
+          </a>
+        )}
       </div>
 
       {/* Details Section */}

@@ -11,7 +11,9 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
     jobTitle: '',
     dateApplied: '',
     status: 'Applied' as JobApplication['status'],
-    details: ''
+    details: '',
+    url: '',
+    salary: ''
   });
   const [error, setError] = useState('');
 
@@ -38,7 +40,9 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
       jobTitle: '',
       dateApplied: '',
       status: 'Applied',
-      details: ''
+      details: '',
+      url: '',
+      salary: ''
     });
   };
 
@@ -49,7 +53,7 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
         <p className="text-sm text-red-600 mb-2">{error}</p>
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
             <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
               Company Name *
@@ -113,6 +117,36 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
               <option value="Offer">Offer</option>
               <option value="Rejected">Rejected</option>
             </select>
+          </div>
+
+          <div>
+            <label htmlFor="salary" className="block text-sm font-medium text-gray-700 mb-1">
+              Salary / Range
+            </label>
+            <input
+              type="text"
+              id="salary"
+              name="salary"
+              value={formData.salary}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="e.g. $80k–$100k"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-1">
+              Job Posting URL
+            </label>
+            <input
+              type="url"
+              id="url"
+              name="url"
+              value={formData.url}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="https://..."
+            />
           </div>
         </div>
         
