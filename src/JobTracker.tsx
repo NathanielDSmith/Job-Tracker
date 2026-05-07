@@ -9,6 +9,8 @@ const JobTracker: React.FC = () => {
   const [jobApplications, setJobApplications] = useState<JobApplication[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [expandedDetails, setExpandedDetails] = useState<Set<number>>(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<JobApplication['status'] | 'All'>('All');
   const [editFormData, setEditFormData] = useState({
     companyName: '',
     jobTitle: '',
@@ -192,13 +194,28 @@ const JobTracker: React.FC = () => {
     });
   };
 
+  const statusCounts = {
+    All: jobApplications.length,
+    Applied: jobApplications.filter(j => j.status === 'Applied').length,
+    Interview: jobApplications.filter(j => j.status === 'Interview').length,
+    Offer: jobApplications.filter(j => j.status === 'Offer').length,
+    Rejected: jobApplications.filter(j => j.status === 'Rejected').length,
+  };
+
+  const filteredApplications = jobApplications.filter(job => {
+    const matchesStatus = statusFilter === 'All' || job.status === statusFilter;
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = !q || job.companyName.toLowerCase().includes(q) || job.jobTitle.toLowerCase().includes(q);
+    return matchesStatus && matchesSearch;
+  });
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-800">
           Job Application Tracker
         </h1>
-        <button 
+        <button
           onClick={resetToDefaultData}
           className="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-gray-700"
           title="Reset to default data"
@@ -206,13 +223,42 @@ const JobTracker: React.FC = () => {
           🔄 Reset
         </button>
       </div>
-      
+
       {/* Add New Job Form */}
       <JobForm onSubmit={handleAddJob} />
-      
+
+      {/* Search and Filter */}
+      <div className="mb-6 space-y-3">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Search by company or job title..."
+          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+        />
+        <div className="flex flex-wrap gap-2">
+          {(['All', 'Applied', 'Interview', 'Offer', 'Rejected'] as const).map(s => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors duration-150 ${
+                statusFilter === s
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-600'
+              }`}
+            >
+              {s} <span className="opacity-70">({statusCounts[s]})</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Job Applications List */}
+      {filteredApplications.length === 0 && (
+        <p className="text-center text-gray-400 py-12 text-sm">No applications match your search.</p>
+      )}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {jobApplications.map((job) => (
+        {filteredApplications.map((job) => (
           <JobCard
             key={job.id}
             job={job}
