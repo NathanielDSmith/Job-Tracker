@@ -1,57 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import type { JobApplication, Note } from './types';
+import React, { useState } from 'react';
+import type { JobApplication } from './types';
+import { useJobApplications } from './hooks/useJobApplications';
 import JobForm from './JobForm';
 import JobCard from './JobCard';
+import EditModal from './components/EditModal';
 
-const STORAGE_KEY = 'jobApplications';
+interface JobTrackerProps {
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+}
 
-const JobTracker: React.FC = () => {
-  const [jobApplications, setJobApplications] = useState<JobApplication[]>([]);
-  const [editingId, setEditingId] = useState<number | null>(null);
+const JobTracker: React.FC<JobTrackerProps> = ({ theme, toggleTheme }) => {
+  const { jobApplications, addJob, deleteJob, editJob, addNote, deleteNote } = useJobApplications();
+  const [editingJob, setEditingJob] = useState<JobApplication | null>(null);
   const [expandedDetails, setExpandedDetails] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<JobApplication['status'] | 'All'>('All');
-  const [editFormData, setEditFormData] = useState({
-    companyName: '',
-    jobTitle: '',
-    dateApplied: '',
-    status: 'Applied' as JobApplication['status'],
-    details: '',
-    url: '',
-    salary: ''
-  });
-  const [editError, setEditError] = useState('');
-
-  // Load data from localStorage on component mount
-  useEffect(() => {
-    const savedJobs = localStorage.getItem(STORAGE_KEY);
-    if (savedJobs) {
-      try {
-        const parsedJobs = JSON.parse(savedJobs);
-        if (Array.isArray(parsedJobs)) {
-          setJobApplications(parsedJobs);
-        }
-      } catch {
-        // corrupted data — start fresh
-      }
-    }
-  }, []);
-
-  // Save data to localStorage whenever jobApplications changes
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(jobApplications));
-  }, [jobApplications]);
-
-  const handleAddJob = (jobData: Omit<JobApplication, 'id'>) => {
-    const newJob: JobApplication = {
-      id: Date.now(),
-      ...jobData
-    };
-    setJobApplications(prev => [...prev, newJob]);
-  };
 
   const handleDelete = (id: number) => {
-    setJobApplications(prev => prev.filter(job => job.id !== id));
+    deleteJob(id);
     setExpandedDetails(prev => {
       const newSet = new Set(prev);
       newSet.delete(id);
@@ -59,83 +26,9 @@ const JobTracker: React.FC = () => {
     });
   };
 
-  const handleAddNote = (jobId: number, text: string) => {
-    const note: Note = {
-      id: Date.now(),
-      text,
-      timestamp: new Date().toISOString()
-    };
-    setJobApplications(prev => prev.map(job =>
-      job.id === jobId
-        ? { ...job, notes: [...(job.notes ?? []), note] }
-        : job
-    ));
-  };
-
-  const handleDeleteNote = (jobId: number, noteId: number) => {
-    setJobApplications(prev => prev.map(job =>
-      job.id === jobId
-        ? { ...job, notes: (job.notes ?? []).filter(n => n.id !== noteId) }
-        : job
-    ));
-  };
-
-  const handleEdit = (job: JobApplication) => {
-    setEditingId(job.id);
-    setEditFormData({
-      companyName: job.companyName,
-      jobTitle: job.jobTitle,
-      dateApplied: job.dateApplied,
-      status: job.status,
-      details: job.details,
-      url: job.url ?? '',
-      salary: job.salary ?? ''
-    });
-  };
-
-  const handleSaveEdit = () => {
-    if (!editFormData.companyName || !editFormData.jobTitle || !editFormData.dateApplied) {
-      setEditError('Company name, job title, and date applied are required.');
-      return;
-    }
-    setEditError('');
-
-    setJobApplications(prev => prev.map(job => 
-      job.id === editingId ? { ...job, ...editFormData } : job
-    ));
-
-    setEditingId(null);
-    setEditFormData({
-      companyName: '',
-      jobTitle: '',
-      dateApplied: '',
-      status: 'Applied',
-      details: '',
-      url: '',
-      salary: ''
-    });
-  };
-
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditError('');
-    setEditFormData({
-      companyName: '',
-      jobTitle: '',
-      dateApplied: '',
-      status: 'Applied',
-      details: '',
-      url: '',
-      salary: ''
-    });
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setEditFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const handleSaveEdit = (id: number, updates: Omit<JobApplication, 'id' | 'notes'>) => {
+    editJob(id, updates);
+    setEditingJob(null);
   };
 
   const toggleDetails = (id: number) => {
@@ -167,37 +60,49 @@ const JobTracker: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-800">Job Application Tracker</h1>
-        <p className="text-slate-500 text-sm mt-1">Keep your job search organized in one place</p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-neon">
+            Job Application Tracker
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Keep your job search organized in one place</p>
+        </div>
+        <button
+          onClick={toggleTheme}
+          aria-label="Toggle dark mode"
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          className="shrink-0 w-10 h-10 rounded-full border border-slate-200 dark:border-neon-violet/30 bg-white dark:bg-bg-card flex items-center justify-center text-lg hover:border-neon-violet dark:hover:border-neon-cyan transition-colors duration-150"
+        >
+          {theme === 'dark' ? '☀️' : '🌙'}
+        </button>
       </div>
 
       {/* Stats summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
         {[
-          { label: 'Applied', count: statusCounts.Applied, bg: 'bg-blue-50', border: 'border-blue-100', text: 'text-blue-700' },
-          { label: 'Interview', count: statusCounts.Interview, bg: 'bg-amber-50', border: 'border-amber-100', text: 'text-amber-700' },
-          { label: 'Offer', count: statusCounts.Offer, bg: 'bg-emerald-50', border: 'border-emerald-100', text: 'text-emerald-700' },
-          { label: 'Rejected', count: statusCounts.Rejected, bg: 'bg-red-50', border: 'border-red-100', text: 'text-red-500' },
+          { label: 'Applied', count: statusCounts.Applied, bg: 'bg-violet-50 dark:bg-neon-violet/10', border: 'border-violet-100 dark:border-neon-violet/20', text: 'text-violet-700 dark:text-neon-violet-light' },
+          { label: 'Interview', count: statusCounts.Interview, bg: 'bg-amber-50 dark:bg-amber-400/10', border: 'border-amber-100 dark:border-amber-400/20', text: 'text-amber-700 dark:text-amber-400' },
+          { label: 'Offer', count: statusCounts.Offer, bg: 'bg-emerald-50 dark:bg-emerald-400/10', border: 'border-emerald-100 dark:border-emerald-400/20', text: 'text-emerald-700 dark:text-emerald-400' },
+          { label: 'Rejected', count: statusCounts.Rejected, bg: 'bg-pink-50 dark:bg-neon-pink/10', border: 'border-pink-100 dark:border-neon-pink/20', text: 'text-pink-600 dark:text-neon-pink' },
         ].map(({ label, count, bg, border, text }) => (
           <div key={label} className={`${bg} border ${border} rounded-xl px-4 py-3 text-center`}>
-            <p className={`text-2xl font-bold ${text}`}>{count}</p>
+            <p className={`text-2xl font-bold font-mono ${text}`}>{count}</p>
             <p className={`text-xs font-medium ${text} opacity-75`}>{label}</p>
           </div>
         ))}
       </div>
 
       {/* Add New Job Form */}
-      <JobForm onSubmit={handleAddJob} />
+      <JobForm onSubmit={addJob} />
 
       {/* Search and Filter */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6 space-y-3">
+      <div className="bg-white dark:bg-bg-card dark:border dark:border-neon-violet/10 border border-gray-200 rounded-xl p-4 mb-6 space-y-3">
         <input
           type="text"
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="Search by company or job title..."
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm placeholder-gray-400"
+          className="w-full px-4 py-2 border border-gray-200 dark:border-neon-violet/20 rounded-lg bg-slate-50 dark:bg-bg-secondary text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-neon-violet dark:focus:ring-neon-cyan focus:border-transparent text-sm placeholder-gray-400 dark:placeholder-slate-500"
         />
         <div className="flex flex-wrap gap-2">
           {(['All', 'Applied', 'Interview', 'Offer', 'Rejected'] as const).map(s => (
@@ -206,8 +111,8 @@ const JobTracker: React.FC = () => {
               onClick={() => setStatusFilter(s)}
               className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors duration-150 ${
                 statusFilter === s
-                  ? 'bg-indigo-600 text-white border-indigo-600'
-                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
+                  ? 'bg-neon-violet text-white border-neon-violet'
+                  : 'bg-slate-50 dark:bg-bg-secondary text-slate-600 dark:text-slate-300 border-slate-200 dark:border-neon-violet/20 hover:border-neon-violet dark:hover:border-neon-cyan hover:text-neon-violet dark:hover:text-neon-cyan'
               }`}
             >
               {s} <span className="opacity-60">({statusCounts[s]})</span>
@@ -219,7 +124,7 @@ const JobTracker: React.FC = () => {
       {/* Job Applications List */}
       {filteredApplications.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-slate-400 text-sm">
+          <p className="text-slate-400 dark:text-slate-500 text-sm">
             {jobApplications.length === 0
               ? 'No applications yet — add one above to get started.'
               : 'No applications match your search.'}
@@ -231,158 +136,25 @@ const JobTracker: React.FC = () => {
           <JobCard
             key={job.id}
             job={job}
-            onEdit={handleEdit}
+            onEdit={setEditingJob}
             onDelete={handleDelete}
             isExpanded={expandedDetails.has(job.id)}
             onToggleDetails={toggleDetails}
-            onAddNote={handleAddNote}
-            onDeleteNote={handleDeleteNote}
+            onAddNote={addNote}
+            onDeleteNote={deleteNote}
           />
         ))}
       </div>
 
-      {/* Edit Modal Overlay */}
-      {editingId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Edit Application</h2>
-              {editError && (
-                <p className="text-sm text-red-600 mb-2">{editError}</p>
-              )}
-              <form onSubmit={(e) => { e.preventDefault(); handleSaveEdit(); }} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="edit-companyName" className="block text-sm font-medium text-gray-700 mb-1">
-                      Company Name *
-                    </label>
-                    <input
-                      type="text"
-                      id="edit-companyName"
-                      name="companyName"
-                      value={editFormData.companyName}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="edit-jobTitle" className="block text-sm font-medium text-gray-700 mb-1">
-                      Job Title *
-                    </label>
-                    <input
-                      type="text"
-                      id="edit-jobTitle"
-                      name="jobTitle"
-                      value={editFormData.jobTitle}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="edit-dateApplied" className="block text-sm font-medium text-gray-700 mb-1">
-                      Date Applied *
-                    </label>
-                    <input
-                      type="date"
-                      id="edit-dateApplied"
-                      name="dateApplied"
-                      value={editFormData.dateApplied}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="edit-status" className="block text-sm font-medium text-gray-700 mb-1">
-                      Status
-                    </label>
-                    <select
-                      id="edit-status"
-                      name="status"
-                      value={editFormData.status}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
-                    >
-                      <option value="Applied">Applied</option>
-                      <option value="Interview">Interview</option>
-                      <option value="Offer">Offer</option>
-                      <option value="Rejected">Rejected</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label htmlFor="edit-salary" className="block text-sm font-medium text-gray-700 mb-1">
-                      Salary / Range
-                    </label>
-                    <input
-                      type="text"
-                      id="edit-salary"
-                      name="salary"
-                      value={editFormData.salary}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
-                      placeholder="e.g. $80k–$100k"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="edit-url" className="block text-sm font-medium text-gray-700 mb-1">
-                    Job Posting URL
-                  </label>
-                  <input
-                    type="url"
-                    id="edit-url"
-                    name="url"
-                    value={editFormData.url}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
-                    placeholder="https://..."
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="edit-details" className="block text-sm font-medium text-gray-700 mb-1">
-                    Details
-                  </label>
-                  <textarea
-                    id="edit-details"
-                    name="details"
-                    value={editFormData.details}
-                    onChange={handleInputChange}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
-                    placeholder="Add any additional details about the application..."
-                  />
-                </div>
-                
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200 text-sm font-medium"
-                  >
-                    Save Changes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCancelEdit}
-                    className="flex-1 bg-slate-100 text-slate-600 py-2 px-4 rounded-lg hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 transition-colors duration-200 text-sm font-medium"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
+      {editingJob && (
+        <EditModal
+          job={editingJob}
+          onSave={handleSaveEdit}
+          onCancel={() => setEditingJob(null)}
+        />
       )}
     </div>
   );
 };
 
-export default JobTracker; 
+export default JobTracker;

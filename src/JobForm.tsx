@@ -5,6 +5,11 @@ interface JobFormProps {
   onSubmit: (job: Omit<JobApplication, 'id'>) => void;
 }
 
+const inputClasses =
+  'w-full px-3 py-2 border border-gray-200 dark:border-neon-violet/20 rounded-lg bg-slate-50 dark:bg-bg-secondary text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-neon-violet dark:focus:ring-neon-cyan focus:border-transparent text-sm placeholder-gray-400 dark:placeholder-slate-500';
+
+const labelClasses = 'block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1';
+
 const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
     companyName: '',
@@ -27,7 +32,7 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.companyName || !formData.jobTitle || !formData.dateApplied) {
       setError('Company name, job title, and date applied are required.');
       return;
@@ -47,15 +52,15 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-      <h2 className="text-base font-semibold text-slate-700 mb-4">Add New Application</h2>
+    <div className="bg-white dark:bg-bg-card dark:border dark:border-neon-violet/10 rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+      <h2 className="text-base font-semibold text-slate-700 dark:text-slate-200 mb-4">Add New Application</h2>
       {error && (
-        <p className="text-sm text-red-600 mb-2">{error}</p>
+        <p className="text-sm text-red-600 dark:text-neon-pink mb-2">{error}</p>
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
-            <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="companyName" className={labelClasses}>
               Company Name *
             </label>
             <input
@@ -64,14 +69,14 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
               name="companyName"
               value={formData.companyName}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
+              className={inputClasses}
               placeholder="Enter company name"
               required
             />
           </div>
-          
+
           <div>
-            <label htmlFor="jobTitle" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="jobTitle" className={labelClasses}>
               Job Title *
             </label>
             <input
@@ -80,14 +85,14 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
               name="jobTitle"
               value={formData.jobTitle}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
+              className={inputClasses}
               placeholder="Enter job title"
               required
             />
           </div>
-          
+
           <div>
-            <label htmlFor="dateApplied" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="dateApplied" className={labelClasses}>
               Date Applied *
             </label>
             <input
@@ -96,13 +101,13 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
               name="dateApplied"
               value={formData.dateApplied}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
+              className={inputClasses}
               required
             />
           </div>
-          
+
           <div>
-            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="status" className={labelClasses}>
               Status
             </label>
             <select
@@ -110,7 +115,7 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
               name="status"
               value={formData.status}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
+              className={inputClasses}
             >
               <option value="Applied">Applied</option>
               <option value="Interview">Interview</option>
@@ -120,7 +125,7 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
           </div>
 
           <div>
-            <label htmlFor="salary" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="salary" className={labelClasses}>
               Salary / Range
             </label>
             <input
@@ -129,13 +134,13 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
               name="salary"
               value={formData.salary}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
+              className={inputClasses}
               placeholder="e.g. $80k–$100k"
             />
           </div>
 
           <div>
-            <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="url" className={labelClasses}>
               Job Posting URL
             </label>
             <input
@@ -144,14 +149,14 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
               name="url"
               value={formData.url}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
+              className={inputClasses}
               placeholder="https://..."
             />
           </div>
         </div>
-        
+
         <div>
-          <label htmlFor="details" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="details" className={labelClasses}>
             Details
           </label>
           <textarea
@@ -160,15 +165,15 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
             value={formData.details}
             onChange={handleInputChange}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent text-sm"
+            className={inputClasses}
             placeholder="Add any additional details about the application..."
           />
         </div>
-        
+
         <div>
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200 text-sm font-medium"
+            className="w-full bg-neon-violet hover:bg-neon-indigo text-white py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-neon-violet focus:ring-offset-2 dark:focus:ring-offset-bg-card transition-colors duration-200 text-sm font-medium"
           >
             Add Application
           </button>
@@ -178,4 +183,4 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
   );
 };
 
-export default JobForm; 
+export default JobForm;
