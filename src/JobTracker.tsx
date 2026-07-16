@@ -13,7 +13,7 @@ interface JobTrackerProps {
 }
 
 const JobTracker: React.FC<JobTrackerProps> = ({ theme, toggleTheme }) => {
-  const { jobApplications, addJob, deleteJob, editJob, addNote, deleteNote } = useJobApplications();
+  const { jobApplications, addJob, deleteJob, editJob, addNote, deleteNote, addEvent, deleteEvent } = useJobApplications();
   const [editingJob, setEditingJob] = useState<JobApplication | null>(null);
   const [expandedDetails, setExpandedDetails] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,7 +29,7 @@ const JobTracker: React.FC<JobTrackerProps> = ({ theme, toggleTheme }) => {
     });
   };
 
-  const handleSaveEdit = (id: number, updates: Omit<JobApplication, 'id' | 'notes'>) => {
+  const handleSaveEdit = (id: number, updates: Omit<JobApplication, 'id' | 'notes' | 'events'>) => {
     editJob(id, updates);
     setEditingJob(null);
   };
@@ -203,6 +203,8 @@ const JobTracker: React.FC<JobTrackerProps> = ({ theme, toggleTheme }) => {
                 onToggleDetails={toggleDetails}
                 onAddNote={addNote}
                 onDeleteNote={deleteNote}
+                onAddEvent={addEvent}
+                onDeleteEvent={deleteEvent}
               />
             ))}
           </div>
