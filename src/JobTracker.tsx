@@ -5,6 +5,7 @@ import { getFollowUpStatus, getDaysOverdue } from './utils/followUp';
 import JobForm from './JobForm';
 import JobCard from './JobCard';
 import EditModal from './components/EditModal';
+import CalendarView from './components/CalendarView';
 
 interface JobTrackerProps {
   theme: 'light' | 'dark';
@@ -17,6 +18,7 @@ const JobTracker: React.FC<JobTrackerProps> = ({ theme, toggleTheme }) => {
   const [expandedDetails, setExpandedDetails] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<JobApplication['status'] | 'All'>('All');
+  const [view, setView] = useState<'list' | 'calendar'>('list');
 
   const handleDelete = (id: number) => {
     deleteJob(id);
@@ -133,56 +135,79 @@ const JobTracker: React.FC<JobTrackerProps> = ({ theme, toggleTheme }) => {
       {/* Add New Job Form */}
       <JobForm onSubmit={addJob} />
 
-      {/* Search and Filter */}
-      <div className="bg-white dark:bg-bg-card dark:border dark:border-neon-violet/10 border border-gray-200 rounded-xl p-4 mb-6 space-y-3">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          placeholder="Search by company or job title..."
-          className="w-full px-4 py-2 border border-gray-200 dark:border-neon-violet/20 rounded-lg bg-slate-50 dark:bg-bg-secondary text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-neon-violet dark:focus:ring-neon-cyan focus:border-transparent text-sm placeholder-gray-400 dark:placeholder-slate-500"
-        />
-        <div className="flex flex-wrap gap-2">
-          {(['All', 'Applied', 'Interview', 'Offer', 'Rejected'] as const).map(s => (
-            <button
-              key={s}
-              onClick={() => setStatusFilter(s)}
-              className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors duration-150 ${
-                statusFilter === s
-                  ? 'bg-neon-violet text-white border-neon-violet'
-                  : 'bg-slate-50 dark:bg-bg-secondary text-slate-600 dark:text-slate-300 border-slate-200 dark:border-neon-violet/20 hover:border-neon-violet dark:hover:border-neon-cyan hover:text-neon-violet dark:hover:text-neon-cyan'
-              }`}
-            >
-              {s} <span className="opacity-60">({statusCounts[s]})</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Job Applications List */}
-      {filteredApplications.length === 0 && (
-        <div className="text-center py-16">
-          <p className="text-slate-400 dark:text-slate-500 text-sm">
-            {jobApplications.length === 0
-              ? 'No applications yet — add one above to get started.'
-              : 'No applications match your search.'}
-          </p>
-        </div>
-      )}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredApplications.map((job) => (
-          <JobCard
-            key={job.id}
-            job={job}
-            onEdit={setEditingJob}
-            onDelete={handleDelete}
-            isExpanded={expandedDetails.has(job.id)}
-            onToggleDetails={toggleDetails}
-            onAddNote={addNote}
-            onDeleteNote={deleteNote}
-          />
+      {/* View toggle */}
+      <div className="flex gap-2 mb-6">
+        {(['list', 'calendar'] as const).map(v => (
+          <button
+            key={v}
+            onClick={() => setView(v)}
+            className={`px-4 py-1.5 rounded-full text-xs font-medium border transition-colors duration-150 capitalize ${
+              view === v
+                ? 'bg-neon-violet text-white border-neon-violet'
+                : 'bg-slate-50 dark:bg-bg-secondary text-slate-600 dark:text-slate-300 border-slate-200 dark:border-neon-violet/20 hover:border-neon-violet dark:hover:border-neon-cyan hover:text-neon-violet dark:hover:text-neon-cyan'
+            }`}
+          >
+            {v}
+          </button>
         ))}
       </div>
+
+      {view === 'calendar' ? (
+        <CalendarView jobApplications={jobApplications} onSelectJob={setEditingJob} />
+      ) : (
+        <>
+          {/* Search and Filter */}
+          <div className="bg-white dark:bg-bg-card dark:border dark:border-neon-violet/10 border border-gray-200 rounded-xl p-4 mb-6 space-y-3">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search by company or job title..."
+              className="w-full px-4 py-2 border border-gray-200 dark:border-neon-violet/20 rounded-lg bg-slate-50 dark:bg-bg-secondary text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-neon-violet dark:focus:ring-neon-cyan focus:border-transparent text-sm placeholder-gray-400 dark:placeholder-slate-500"
+            />
+            <div className="flex flex-wrap gap-2">
+              {(['All', 'Applied', 'Interview', 'Offer', 'Rejected'] as const).map(s => (
+                <button
+                  key={s}
+                  onClick={() => setStatusFilter(s)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors duration-150 ${
+                    statusFilter === s
+                      ? 'bg-neon-violet text-white border-neon-violet'
+                      : 'bg-slate-50 dark:bg-bg-secondary text-slate-600 dark:text-slate-300 border-slate-200 dark:border-neon-violet/20 hover:border-neon-violet dark:hover:border-neon-cyan hover:text-neon-violet dark:hover:text-neon-cyan'
+                  }`}
+                >
+                  {s} <span className="opacity-60">({statusCounts[s]})</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Job Applications List */}
+          {filteredApplications.length === 0 && (
+            <div className="text-center py-16">
+              <p className="text-slate-400 dark:text-slate-500 text-sm">
+                {jobApplications.length === 0
+                  ? 'No applications yet — add one above to get started.'
+                  : 'No applications match your search.'}
+              </p>
+            </div>
+          )}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredApplications.map((job) => (
+              <JobCard
+                key={job.id}
+                job={job}
+                onEdit={setEditingJob}
+                onDelete={handleDelete}
+                isExpanded={expandedDetails.has(job.id)}
+                onToggleDetails={toggleDetails}
+                onAddNote={addNote}
+                onDeleteNote={deleteNote}
+              />
+            ))}
+          </div>
+        </>
+      )}
 
       {editingJob && (
         <EditModal
