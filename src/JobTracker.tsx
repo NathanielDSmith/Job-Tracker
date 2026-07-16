@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import type { JobApplication } from './types';
 import { useJobApplications } from './hooks/useJobApplications';
+import { useGeneralNotes } from './hooks/useGeneralNotes';
 import { getFollowUpStatus, getDaysOverdue } from './utils/followUp';
 import JobForm from './JobForm';
 import JobCard from './JobCard';
 import EditModal from './components/EditModal';
 import CalendarView from './components/CalendarView';
+import NotesPanel from './components/NotesPanel';
 
 interface JobTrackerProps {
   theme: 'light' | 'dark';
@@ -14,11 +16,12 @@ interface JobTrackerProps {
 
 const JobTracker: React.FC<JobTrackerProps> = ({ theme, toggleTheme }) => {
   const { jobApplications, addJob, deleteJob, editJob, addNote, deleteNote, addEvent, deleteEvent } = useJobApplications();
+  const { generalNotes, addNote: addGeneralNote, deleteNote: deleteGeneralNote } = useGeneralNotes();
   const [editingJob, setEditingJob] = useState<JobApplication | null>(null);
   const [expandedDetails, setExpandedDetails] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<JobApplication['status'] | 'All'>('All');
-  const [view, setView] = useState<'list' | 'calendar'>('list');
+  const [view, setView] = useState<'list' | 'calendar' | 'notes'>('list');
 
   const handleDelete = (id: number) => {
     deleteJob(id);
@@ -137,7 +140,7 @@ const JobTracker: React.FC<JobTrackerProps> = ({ theme, toggleTheme }) => {
 
       {/* View toggle */}
       <div className="flex gap-2 mb-6">
-        {(['list', 'calendar'] as const).map(v => (
+        {(['list', 'calendar', 'notes'] as const).map(v => (
           <button
             key={v}
             onClick={() => setView(v)}
@@ -152,9 +155,15 @@ const JobTracker: React.FC<JobTrackerProps> = ({ theme, toggleTheme }) => {
         ))}
       </div>
 
-      {view === 'calendar' ? (
+      {view === 'calendar' && (
         <CalendarView jobApplications={jobApplications} onSelectJob={setEditingJob} />
-      ) : (
+      )}
+
+      {view === 'notes' && (
+        <NotesPanel notes={generalNotes} onAddNote={addGeneralNote} onDeleteNote={deleteGeneralNote} />
+      )}
+
+      {view === 'list' && (
         <>
           {/* Search and Filter */}
           <div className="bg-white dark:bg-bg-card dark:border dark:border-neon-violet/10 border border-gray-200 rounded-xl p-4 mb-6 space-y-3">
