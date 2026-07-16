@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { JobApplication } from '../types';
+import type { InterviewEvent, JobApplication } from '../types';
 
 interface CalendarViewProps {
   jobApplications: JobApplication[];
@@ -16,7 +16,9 @@ const todayKey = () => {
   return toDateKey(now.getFullYear(), now.getMonth(), now.getDate());
 };
 
-type ChipEntry = { job: JobApplication; type: 'applied' | 'followUp' };
+type ChipEntry =
+  | { job: JobApplication; type: 'applied' | 'followUp' }
+  | { job: JobApplication; type: 'interview'; event: InterviewEvent };
 
 const CalendarView: React.FC<CalendarViewProps> = ({ jobApplications, onSelectJob }) => {
   const [viewedMonth, setViewedMonth] = useState(() => {
@@ -90,9 +92,16 @@ const CalendarView: React.FC<CalendarViewProps> = ({ jobApplications, onSelectJo
           const dateKey = toDateKey(year, month, day);
           const isToday = dateKey === today;
 
+          const interviewEntries: ChipEntry[] = jobApplications.flatMap(job =>
+            (job.events ?? [])
+              .filter(event => event.date === dateKey)
+              .map(event => ({ job, type: 'interview' as const, event }))
+          );
+
           const entries: ChipEntry[] = [
             ...jobApplications.filter(j => j.dateApplied === dateKey).map(job => ({ job, type: 'applied' as const })),
             ...jobApplications.filter(j => j.followUpDate === dateKey).map(job => ({ job, type: 'followUp' as const })),
+            ...interviewEntries,
           ];
           const visibleEntries = entries.slice(0, MAX_CHIPS_PER_DAY);
           const overflowCount = entries.length - visibleEntries.length;
@@ -110,20 +119,29 @@ const CalendarView: React.FC<CalendarViewProps> = ({ jobApplications, onSelectJo
                 {day}
               </p>
               <div className="space-y-0.5">
-                {visibleEntries.map(({ job, type }, idx) => (
-                  <button
-                    key={`${job.id}-${type}-${idx}`}
-                    onClick={() => onSelectJob(job)}
-                    title={`${job.companyName} · ${job.jobTitle}`}
-                    className={`w-full truncate text-left text-[10px] leading-tight px-1 py-0.5 rounded border ${
-                      type === 'applied'
-                        ? 'bg-violet-50 dark:bg-neon-violet/10 border-violet-200 dark:border-neon-violet/30 text-violet-700 dark:text-neon-violet-light'
-                        : 'bg-amber-50 dark:bg-amber-400/10 border-amber-200 dark:border-amber-400/30 text-amber-700 dark:text-amber-400'
-                    }`}
-                  >
-                    {job.companyName}
-                  </button>
-                ))}
+                {visibleEntries.map((entry, idx) => {
+                  const { job, type } = entry;
+                  const colorClasses =
+                    type === 'applied'
+                      ? 'bg-violet-50 dark:bg-neon-violet/10 border-violet-200 dark:border-neon-violet/30 text-violet-700 dark:text-neon-violet-light'
+                      : type === 'followUp'
+                        ? 'bg-amber-50 dark:bg-amber-400/10 border-amber-200 dark:border-amber-400/30 text-amber-700 dark:text-amber-400'
+                        : 'bg-cyan-50 dark:bg-neon-cyan/10 border-cyan-200 dark:border-neon-cyan/30 text-cyan-700 dark:text-neon-cyan';
+                  const label = type === 'interview' && entry.event.time
+                    ? `${entry.event.time} ${job.companyName}`
+                    : job.companyName;
+
+                  return (
+                    <button
+                      key={`${job.id}-${type}-${idx}`}
+                      onClick={() => onSelectJob(job)}
+                      title={`${job.companyName} · ${job.jobTitle}`}
+                      className={`w-full truncate text-left text-[10px] leading-tight px-1 py-0.5 rounded border ${colorClasses}`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
                 {overflowCount > 0 && (
                   <p className="text-[10px] text-slate-400 dark:text-slate-500 px-1">+{overflowCount} more</p>
                 )}
@@ -139,6 +157,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ jobApplications, onSelectJo
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" /> Follow-up
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 dark:bg-neon-cyan inline-block" /> Interview
         </span>
       </div>
     </div>

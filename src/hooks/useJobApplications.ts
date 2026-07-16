@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { JobApplication, Note } from '../types';
+import type { InterviewEvent, JobApplication, Note } from '../types';
 
 const STORAGE_KEY = 'jobApplications';
 
@@ -36,7 +36,7 @@ export const useJobApplications = () => {
     setJobApplications(prev => prev.filter(job => job.id !== id));
   };
 
-  const editJob = (id: number, updates: Omit<JobApplication, 'id' | 'notes'>) => {
+  const editJob = (id: number, updates: Omit<JobApplication, 'id' | 'notes' | 'events'>) => {
     setJobApplications(prev => prev.map(job => (job.id === id ? { ...job, ...updates } : job)));
   };
 
@@ -61,5 +61,25 @@ export const useJobApplications = () => {
     ));
   };
 
-  return { jobApplications, addJob, deleteJob, editJob, addNote, deleteNote };
+  const addEvent = (jobId: number, event: Omit<InterviewEvent, 'id'>) => {
+    const newEvent: InterviewEvent = {
+      id: Date.now(),
+      ...event,
+    };
+    setJobApplications(prev => prev.map(job =>
+      job.id === jobId
+        ? { ...job, events: [...(job.events ?? []), newEvent] }
+        : job
+    ));
+  };
+
+  const deleteEvent = (jobId: number, eventId: number) => {
+    setJobApplications(prev => prev.map(job =>
+      job.id === jobId
+        ? { ...job, events: (job.events ?? []).filter(e => e.id !== eventId) }
+        : job
+    ));
+  };
+
+  return { jobApplications, addJob, deleteJob, editJob, addNote, deleteNote, addEvent, deleteEvent };
 };

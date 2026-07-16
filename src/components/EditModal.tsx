@@ -3,7 +3,7 @@ import type { JobApplication } from '../types';
 
 interface EditModalProps {
   job: JobApplication;
-  onSave: (id: number, updates: Omit<JobApplication, 'id' | 'notes'>) => void;
+  onSave: (id: number, updates: Omit<JobApplication, 'id' | 'notes' | 'events'>) => void;
   onCancel: () => void;
 }
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import type { JobApplication } from './types';
+import type { InterviewEvent, JobApplication } from './types';
 import { getFollowUpStatus } from './utils/followUp';
+import { sortEvents, isPastEvent, getNextUpcomingEvent, formatEventDateTime } from './utils/events';
 
 interface JobCardProps {
   job: JobApplication;
@@ -10,7 +11,11 @@ interface JobCardProps {
   onToggleDetails: (id: number) => void;
   onAddNote: (jobId: number, text: string) => void;
   onDeleteNote: (jobId: number, noteId: number) => void;
+  onAddEvent: (jobId: number, event: Omit<InterviewEvent, 'id'>) => void;
+  onDeleteEvent: (jobId: number, eventId: number) => void;
 }
+
+const EVENT_TYPES: InterviewEvent['type'][] = ['Phone Screen', 'Technical', 'Onsite', 'Final', 'Other'];
 
 const JobCard: React.FC<JobCardProps> = ({
   job,
@@ -19,9 +24,15 @@ const JobCard: React.FC<JobCardProps> = ({
   isExpanded,
   onToggleDetails,
   onAddNote,
-  onDeleteNote
+  onDeleteNote,
+  onAddEvent,
+  onDeleteEvent
 }) => {
   const [noteText, setNoteText] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [eventTime, setEventTime] = useState('');
+  const [eventType, setEventType] = useState<InterviewEvent['type']>('Phone Screen');
+  const [eventLocation, setEventLocation] = useState('');
 
   const getStatusBadge = (status: JobApplication['status']) => {
     switch (status) {
@@ -74,8 +85,29 @@ const JobCard: React.FC<JobCardProps> = ({
     setNoteText('');
   };
 
+  const handleEventSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!eventDate) return;
+    onAddEvent(job.id, {
+      date: eventDate,
+      time: eventTime || undefined,
+      type: eventType,
+      location: eventLocation || undefined,
+    });
+    setEventDate('');
+    setEventTime('');
+    setEventType('Phone Screen');
+    setEventLocation('');
+  };
+
   const notes = job.notes ?? [];
+  const events = job.events ?? [];
   const followUpStatus = getFollowUpStatus(job.followUpDate);
+  const nextEvent = getNextUpcomingEvent(events);
+  const detailsPartsCount = [
+    notes.length > 0 ? `${notes.length} note${notes.length !== 1 ? 's' : ''}` : null,
+    events.length > 0 ? `${events.length} interview${events.length !== 1 ? 's' : ''}` : null,
+  ].filter(Boolean);
 
   return (
     <div className={`bg-white dark:bg-bg-card dark:backdrop-blur border border-gray-200 dark:border-neon-violet/15 border-l-4 ${getStatusAccent(job.status)} rounded-xl p-5 shadow-sm hover:shadow-md dark:hover:border-neon-cyan/30 transition-shadow duration-200 relative`}>
@@ -129,6 +161,11 @@ const JobCard: React.FC<JobCardProps> = ({
             ⏰ {followUpStatus === 'overdue' ? 'Follow up overdue' : 'Follow up due today'}
           </span>
         )}
+        {nextEvent && (
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium border bg-cyan-50 dark:bg-neon-cyan/10 text-cyan-700 dark:text-neon-cyan border-cyan-200 dark:border-neon-cyan/30">
+            📅 {nextEvent.type} · {formatEventDateTime(nextEvent)}
+          </span>
+        )}
         <span className="flex-1" />
         {job.url && (
           <a
@@ -143,21 +180,84 @@ const JobCard: React.FC<JobCardProps> = ({
       </div>
 
       {/* Details Section */}
-      {(job.details || notes.length > 0) && (
-        <div className="border-t border-slate-100 dark:border-neon-violet/10 pt-3">
-          <button
-            onClick={() => onToggleDetails(job.id)}
-            className="text-xs text-neon-violet dark:text-neon-cyan hover:underline font-medium mb-2"
-          >
-            {isExpanded ? 'Hide Details' : `View Details${notes.length > 0 ? ` · ${notes.length} note${notes.length !== 1 ? 's' : ''}` : ''}`}
-          </button>
-          {isExpanded && (
-            <div className="space-y-3">
+      <div className="border-t border-slate-100 dark:border-neon-violet/10 pt-3">
+        <button
+          onClick={() => onToggleDetails(job.id)}
+          className="text-xs text-neon-violet dark:text-neon-cyan hover:underline font-medium mb-2"
+        >
+          {isExpanded ? 'Hide Details' : `View Details${detailsPartsCount.length > 0 ? ` · ${detailsPartsCount.join(' · ')}` : ''}`}
+        </button>
+        {isExpanded && (
+            <div className="space-y-4">
               {job.details && (
                 <div className="text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-bg-secondary p-3 rounded-lg leading-relaxed">
                   {job.details}
                 </div>
               )}
+
+              {/* Interviews */}
+              <div className="space-y-2">
+                {events.length > 0 && (
+                  <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Interviews</p>
+                )}
+                {sortEvents(events).map(event => (
+                  <div key={event.id} className={`flex gap-2 items-start group ${isPastEvent(event) ? 'opacity-50' : ''}`}>
+                    <div className="flex-1 bg-slate-50 dark:bg-bg-secondary rounded-lg px-3 py-2 border border-slate-100 dark:border-neon-violet/10">
+                      <p className="text-sm text-slate-700 dark:text-slate-200">
+                        {event.type}
+                        {event.location ? ` · ${event.location}` : ''}
+                      </p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{formatEventDateTime(event)}</p>
+                    </div>
+                    <button
+                      onClick={() => onDeleteEvent(job.id, event.id)}
+                      className="text-gray-300 dark:text-slate-600 hover:text-red-400 dark:hover:text-neon-pink transition-colors duration-150 opacity-0 group-hover:opacity-100 mt-1 text-xs"
+                      title="Delete interview"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+
+                <form onSubmit={handleEventSubmit} className="grid grid-cols-2 gap-2 pt-1">
+                  <input
+                    type="date"
+                    value={eventDate}
+                    onChange={e => setEventDate(e.target.value)}
+                    className="text-sm px-2 py-1.5 border border-slate-200 dark:border-neon-violet/20 rounded-lg bg-slate-50 dark:bg-bg-secondary text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-neon-violet dark:focus:ring-neon-cyan"
+                    required
+                  />
+                  <input
+                    type="time"
+                    value={eventTime}
+                    onChange={e => setEventTime(e.target.value)}
+                    className="text-sm px-2 py-1.5 border border-slate-200 dark:border-neon-violet/20 rounded-lg bg-slate-50 dark:bg-bg-secondary text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-neon-violet dark:focus:ring-neon-cyan"
+                  />
+                  <select
+                    value={eventType}
+                    onChange={e => setEventType(e.target.value as InterviewEvent['type'])}
+                    className="text-sm px-2 py-1.5 border border-slate-200 dark:border-neon-violet/20 rounded-lg bg-slate-50 dark:bg-bg-secondary text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-neon-violet dark:focus:ring-neon-cyan"
+                  >
+                    {EVENT_TYPES.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    value={eventLocation}
+                    onChange={e => setEventLocation(e.target.value)}
+                    placeholder="Location / link (optional)"
+                    className="text-sm px-2 py-1.5 border border-slate-200 dark:border-neon-violet/20 rounded-lg bg-slate-50 dark:bg-bg-secondary text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-neon-violet dark:focus:ring-neon-cyan placeholder-slate-400 dark:placeholder-slate-500"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!eventDate}
+                    className="col-span-2 text-sm px-3 py-1.5 bg-neon-violet hover:bg-neon-indigo text-white rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
+                  >
+                    Add Interview
+                  </button>
+                </form>
+              </div>
 
               {/* Notes */}
               <div className="space-y-2">
@@ -201,29 +301,6 @@ const JobCard: React.FC<JobCardProps> = ({
             </div>
           )}
         </div>
-      )}
-
-      {/* Show note input even when no details, if not expanded */}
-      {!job.details && notes.length === 0 && (
-        <div className="border-t border-slate-100 dark:border-neon-violet/10 pt-3">
-          <form onSubmit={handleNoteSubmit} className="flex gap-2">
-            <input
-              type="text"
-              value={noteText}
-              onChange={e => setNoteText(e.target.value)}
-              placeholder="Add a note..."
-              className="flex-1 text-sm px-3 py-1.5 border border-gray-200 dark:border-neon-violet/20 rounded-md bg-white dark:bg-bg-secondary text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-neon-violet dark:focus:ring-neon-cyan focus:border-transparent"
-            />
-            <button
-              type="submit"
-              disabled={!noteText.trim()}
-              className="text-sm px-3 py-1.5 bg-neon-violet hover:bg-neon-indigo text-white rounded-md disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
-            >
-              Add
-            </button>
-          </form>
-        </div>
-      )}
     </div>
   );
 };
