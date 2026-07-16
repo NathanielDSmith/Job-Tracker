@@ -18,7 +18,8 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
     status: 'Applied' as JobApplication['status'],
     details: '',
     url: '',
-    salary: ''
+    salary: '',
+    followUpDate: ''
   });
   const [error, setError] = useState('');
 
@@ -47,7 +48,8 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
       status: 'Applied',
       details: '',
       url: '',
-      salary: ''
+      salary: '',
+      followUpDate: ''
     });
   };
 
@@ -151,6 +153,20 @@ const JobForm: React.FC<JobFormProps> = ({ onSubmit }) => {
               onChange={handleInputChange}
               className={inputClasses}
               placeholder="https://..."
+            />
+          </div>
+
+          <div>
+            <label htmlFor="followUpDate" className={labelClasses}>
+              Follow up on
+            </label>
+            <input
+              type="date"
+              id="followUpDate"
+              name="followUpDate"
+              value={formData.followUpDate}
+              onChange={handleInputChange}
+              className={inputClasses}
             />
           </div>
         </div>

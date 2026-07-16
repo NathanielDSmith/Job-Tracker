@@ -21,6 +21,7 @@ const EditModal: React.FC<EditModalProps> = ({ job, onSave, onCancel }) => {
     details: job.details,
     url: job.url ?? '',
     salary: job.salary ?? '',
+    followUpDate: job.followUpDate ?? '',
   });
   const [error, setError] = useState('');
 
@@ -126,6 +127,18 @@ const EditModal: React.FC<EditModalProps> = ({ job, onSave, onCancel }) => {
                 onChange={handleInputChange}
                 className={inputClasses}
                 placeholder="https://..."
+              />
+            </div>
+
+            <div>
+              <label htmlFor="edit-followUpDate" className={labelClasses}>Follow up on</label>
+              <input
+                type="date"
+                id="edit-followUpDate"
+                name="followUpDate"
+                value={formData.followUpDate}
+                onChange={handleInputChange}
+                className={inputClasses}
               />
             </div>
 

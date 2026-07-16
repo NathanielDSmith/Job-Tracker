@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { JobApplication } from './types';
+import { getFollowUpStatus } from './utils/followUp';
 
 interface JobCardProps {
   job: JobApplication;
@@ -74,6 +75,7 @@ const JobCard: React.FC<JobCardProps> = ({
   };
 
   const notes = job.notes ?? [];
+  const followUpStatus = getFollowUpStatus(job.followUpDate);
 
   return (
     <div className={`bg-white dark:bg-bg-card dark:backdrop-blur border border-gray-200 dark:border-neon-violet/15 border-l-4 ${getStatusAccent(job.status)} rounded-xl p-5 shadow-sm hover:shadow-md dark:hover:border-neon-cyan/30 transition-shadow duration-200 relative`}>
@@ -116,12 +118,18 @@ const JobCard: React.FC<JobCardProps> = ({
         )}
       </div>
 
-      <div className="flex justify-between items-center mb-3">
+      <div className="flex flex-wrap gap-2 items-center mb-3">
         <span
           className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(job.status)}`}
         >
           {job.status}
         </span>
+        {(followUpStatus === 'overdue' || followUpStatus === 'due-today') && (
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium border bg-amber-50 dark:bg-amber-400/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-400/30">
+            ⏰ {followUpStatus === 'overdue' ? 'Follow up overdue' : 'Follow up due today'}
+          </span>
+        )}
+        <span className="flex-1" />
         {job.url && (
           <a
             href={job.url}
