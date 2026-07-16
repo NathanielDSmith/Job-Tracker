@@ -8,6 +8,7 @@ import JobCard from './JobCard';
 import EditModal from './components/EditModal';
 import CalendarView from './components/CalendarView';
 import NotesPanel from './components/NotesPanel';
+import TodayView from './components/TodayView';
 
 interface JobTrackerProps {
   theme: 'light' | 'dark';
@@ -21,7 +22,7 @@ const JobTracker: React.FC<JobTrackerProps> = ({ theme, toggleTheme }) => {
   const [expandedDetails, setExpandedDetails] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<JobApplication['status'] | 'All'>('All');
-  const [view, setView] = useState<'list' | 'calendar' | 'notes'>('list');
+  const [view, setView] = useState<'today' | 'list' | 'calendar' | 'notes'>('today');
 
   const handleDelete = (id: number) => {
     deleteJob(id);
@@ -140,7 +141,7 @@ const JobTracker: React.FC<JobTrackerProps> = ({ theme, toggleTheme }) => {
 
       {/* View toggle */}
       <div className="flex gap-2 mb-6">
-        {(['list', 'calendar', 'notes'] as const).map(v => (
+        {(['today', 'list', 'calendar', 'notes'] as const).map(v => (
           <button
             key={v}
             onClick={() => setView(v)}
@@ -154,6 +155,10 @@ const JobTracker: React.FC<JobTrackerProps> = ({ theme, toggleTheme }) => {
           </button>
         ))}
       </div>
+
+      {view === 'today' && (
+        <TodayView jobApplications={jobApplications} generalNotes={generalNotes} onSelectJob={setEditingJob} />
+      )}
 
       {view === 'calendar' && (
         <CalendarView jobApplications={jobApplications} onSelectJob={setEditingJob} />
