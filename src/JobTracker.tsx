@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { JobApplication } from './types';
 import { useJobApplications } from './hooks/useJobApplications';
+import { getFollowUpStatus, getDaysOverdue } from './utils/followUp';
 import JobForm from './JobForm';
 import JobCard from './JobCard';
 import EditModal from './components/EditModal';
@@ -58,6 +59,13 @@ const JobTracker: React.FC<JobTrackerProps> = ({ theme, toggleTheme }) => {
     return matchesStatus && matchesSearch;
   });
 
+  const dueApplications = jobApplications
+    .filter(job => {
+      const status = getFollowUpStatus(job.followUpDate);
+      return status === 'overdue' || status === 'due-today';
+    })
+    .sort((a, b) => (a.followUpDate ?? '').localeCompare(b.followUpDate ?? ''));
+
   return (
     <div className="max-w-5xl mx-auto p-6">
       <div className="mb-6 flex items-start justify-between gap-4">
@@ -76,6 +84,36 @@ const JobTracker: React.FC<JobTrackerProps> = ({ theme, toggleTheme }) => {
           {theme === 'dark' ? '☀️' : '🌙'}
         </button>
       </div>
+
+      {/* Follow-up reminders */}
+      {dueApplications.length > 0 && (
+        <div className="mb-6 bg-amber-50 dark:bg-amber-400/10 border border-amber-200 dark:border-amber-400/25 rounded-xl p-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400 mb-2">
+            {dueApplications.length} application{dueApplications.length !== 1 ? 's' : ''} due for follow-up
+          </p>
+          <div className="space-y-1.5">
+            {dueApplications.map(job => {
+              const status = getFollowUpStatus(job.followUpDate);
+              const daysOverdue = job.followUpDate ? getDaysOverdue(job.followUpDate) : 0;
+              return (
+                <button
+                  key={job.id}
+                  onClick={() => setEditingJob(job)}
+                  className="w-full flex items-center justify-between text-left px-3 py-2 rounded-lg bg-white dark:bg-bg-card border border-amber-100 dark:border-amber-400/15 hover:border-amber-300 dark:hover:border-amber-400/40 transition-colors duration-150"
+                >
+                  <span className="text-sm text-slate-700 dark:text-slate-200">
+                    <span className="font-medium">{job.companyName}</span>
+                    <span className="text-slate-400 dark:text-slate-500"> · {job.jobTitle}</span>
+                  </span>
+                  <span className="text-xs font-medium text-amber-700 dark:text-amber-400 shrink-0 ml-3">
+                    {status === 'overdue' ? `${daysOverdue}d overdue` : 'Due today'}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Stats summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">

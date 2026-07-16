@@ -14,4 +14,5 @@ export interface JobApplication {
   url?: string;
   salary?: string;
   notes?: Note[];
+  followUpDate?: string;
 } 
