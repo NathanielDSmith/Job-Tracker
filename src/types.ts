@@ -4,6 +4,12 @@ export interface Note {
   timestamp: string;
 }
 
+export interface GeneralNote {
+  id: number;
+  text: string;
+  timestamp: string;
+}
+
 export interface InterviewEvent {
   id: number;
   date: string;
