@@ -3,12 +3,14 @@ import type { JobApplication } from './types';
 import { useJobApplications } from './hooks/useJobApplications';
 import { useGeneralNotes } from './hooks/useGeneralNotes';
 import { getFollowUpStatus, getDaysOverdue } from './utils/followUp';
+import { exportData } from './utils/exportData';
 import JobForm from './JobForm';
 import JobCard from './JobCard';
 import EditModal from './components/EditModal';
 import CalendarView from './components/CalendarView';
 import NotesPanel from './components/NotesPanel';
 import TodayView from './components/TodayView';
+import ConfirmDialog from './components/ConfirmDialog';
 
 interface JobTrackerProps {
   theme: 'light' | 'dark';
@@ -19,6 +21,7 @@ const JobTracker: React.FC<JobTrackerProps> = ({ theme, toggleTheme }) => {
   const { jobApplications, addJob, deleteJob, editJob, addNote, deleteNote, addEvent, deleteEvent } = useJobApplications();
   const { generalNotes, addNote: addGeneralNote, deleteNote: deleteGeneralNote } = useGeneralNotes();
   const [editingJob, setEditingJob] = useState<JobApplication | null>(null);
+  const [deletingJobId, setDeletingJobId] = useState<number | null>(null);
   const [expandedDetails, setExpandedDetails] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<JobApplication['status'] | 'All'>('All');
@@ -32,6 +35,20 @@ const JobTracker: React.FC<JobTrackerProps> = ({ theme, toggleTheme }) => {
       return newSet;
     });
   };
+
+  const deletingJob = jobApplications.find(j => j.id === deletingJobId) ?? null;
+
+  const confirmDelete = () => {
+    if (deletingJobId !== null) handleDelete(deletingJobId);
+    setDeletingJobId(null);
+  };
+
+  const deleteWarningExtra = deletingJob
+    ? [
+        deletingJob.notes?.length ? `${deletingJob.notes.length} note${deletingJob.notes.length !== 1 ? 's' : ''}` : null,
+        deletingJob.events?.length ? `${deletingJob.events.length} interview${deletingJob.events.length !== 1 ? 's' : ''}` : null,
+      ].filter(Boolean).join(' and ')
+    : '';
 
   const handleSaveEdit = (id: number, updates: Omit<JobApplication, 'id' | 'notes' | 'events'>) => {
     editJob(id, updates);
@@ -81,14 +98,23 @@ const JobTracker: React.FC<JobTrackerProps> = ({ theme, toggleTheme }) => {
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Keep your job search organized in one place</p>
         </div>
-        <button
-          onClick={toggleTheme}
-          aria-label="Toggle dark mode"
-          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          className="shrink-0 w-10 h-10 rounded-full border border-slate-200 dark:border-neon-violet/30 bg-white dark:bg-bg-card flex items-center justify-center text-lg hover:border-neon-violet dark:hover:border-neon-cyan transition-colors duration-150"
-        >
-          {theme === 'dark' ? '☀️' : '🌙'}
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => exportData(jobApplications, generalNotes)}
+            title="Export all data as JSON"
+            className="px-3 h-10 rounded-full border border-slate-200 dark:border-neon-violet/30 bg-white dark:bg-bg-card flex items-center justify-center text-xs font-medium text-slate-600 dark:text-slate-300 hover:border-neon-violet dark:hover:border-neon-cyan transition-colors duration-150"
+          >
+            Export
+          </button>
+          <button
+            onClick={toggleTheme}
+            aria-label="Toggle dark mode"
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="w-10 h-10 rounded-full border border-slate-200 dark:border-neon-violet/30 bg-white dark:bg-bg-card flex items-center justify-center text-lg hover:border-neon-violet dark:hover:border-neon-cyan transition-colors duration-150"
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
+        </div>
       </div>
 
       {/* Follow-up reminders */}
@@ -212,7 +238,7 @@ const JobTracker: React.FC<JobTrackerProps> = ({ theme, toggleTheme }) => {
                 key={job.id}
                 job={job}
                 onEdit={setEditingJob}
-                onDelete={handleDelete}
+                onDelete={setDeletingJobId}
                 isExpanded={expandedDetails.has(job.id)}
                 onToggleDetails={toggleDetails}
                 onAddNote={addNote}
@@ -230,6 +256,16 @@ const JobTracker: React.FC<JobTrackerProps> = ({ theme, toggleTheme }) => {
           job={editingJob}
           onSave={handleSaveEdit}
           onCancel={() => setEditingJob(null)}
+        />
+      )}
+
+      {deletingJob && (
+        <ConfirmDialog
+          title="Delete application?"
+          message={`Delete ${deletingJob.companyName} — ${deletingJob.jobTitle}? This can't be undone.${deleteWarningExtra ? ` This will also delete ${deleteWarningExtra}.` : ''}`}
+          confirmLabel="Delete"
+          onConfirm={confirmDelete}
+          onCancel={() => setDeletingJobId(null)}
         />
       )}
     </div>
